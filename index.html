@@ -71,7 +71,7 @@
         const cartaNauticaLayer = L.imageOverlay(imageUrl, imageBounds, { opacity: 0.6, interactive: true })
             .on('error', () => alert("ERRO: Não foi possível carregar sua imagem PNG. Verifique a URL no código."));
 
-        const map = L.map('map').setView([-26.908, -48.65], 19);
+        const map = L.map('map').setView([-26.908, -48.65], 18);
         cartoLayer.addTo(map);
         map.fitBounds(imageBounds);
         cartaNauticaLayer.addTo(map);
