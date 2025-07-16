@@ -49,7 +49,7 @@
         </div>
         <div class="controls">
             <div class="slider-control"> <label for="raio1" class="label">Raio 1:</label> <input type="range" id="raio1" min="10" max="200" value="50"> <span id="raio1-value" class="value">50 m</span> </div>
-            <div class="slider-control"> <label for="raio2" class="label">Raio 2:</label> <input type="range" id="raio2" min="10" max="200" value="100"> <span id="raio2-value" class="value">100 m</span> </div>
+            <div class="slider-control"> <label for="raio2" class="label">Raio 2:</label> <input type="range" id="raio2" min="10" max="300" value="100"> <span id="raio2-value" class="value">100 m</span> </div>
         </div>
     </div>
     <div id="map"></div>
@@ -91,8 +91,8 @@
             const timestamp = Date.now();
             historicoPontos.push({ lat: latitude, lon: longitude, timestamp: timestamp });
             historicoPontos = historicoPontos.filter(p => timestamp - p.timestamp < TEMPO_MAX_HISTORICO);
-            const pontosRecentes = historicoPontos.filter(p => timestamp - p.timestamp <= 3000);
-            const pontosAntigos = historicoPontos.filter(p => (timestamp - p.timestamp) >= 9000 && (timestamp - p.timestamp) <= 11000);
+            const pontosRecentes = historicoPontos.filter(p => timestamp - p.timestamp <= 3500);
+            const pontosAntigos = historicoPontos.filter(p => (timestamp - p.timestamp) >= 8800 && (timestamp - p.timestamp) <= 11200);
             const mediaRecente = calcularMediaLatLon(pontosRecentes);
             const mediaAntiga = calcularMediaLatLon(pontosAntigos);
             if(pontoMedioLayer) map.removeLayer(pontoMedioLayer);
@@ -115,8 +115,8 @@
                 // VVV ADICIONE ESTA LINHA AQUI VVV
                 map.panTo([mediaRecente.lat, mediaRecente.lon]); // 📍 Centraliza o mapa na posição atual
                 
-                circuloRaio1Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio1, color: '#1E90FF', fillOpacity: 0.1 }).addTo(map);
-                circuloRaio2Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio2, color: '#32CD32', fillOpacity: 0.1 }).addTo(map);
+                circuloRaio1Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio1, color: '#1E90FF', fillOpacity: 0.05 }).addTo(map);
+                circuloRaio2Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio2, color: '#32CD32', fillOpacity: 0.05 }).addTo(map);
                 if (mediaAntiga) {
                     mediaAntigaEl.textContent = `${mediaAntiga.lat.toFixed(5)}, ${mediaAntiga.lon.toFixed(5)}`;
                     const distanciaMetros = haversine(mediaAntiga, mediaRecente);
@@ -127,7 +127,7 @@
                     if (velocidadeKnots < 50 && velocidadeKnots > 0.1) {
                         const distancia30s = (distanciaMetros / 9) * 60;
                         const pontoFinalVetor = calcularPontoDestino(mediaRecente.lat, mediaRecente.lon, distancia30s, direcaoGraus);
-                        vetorVelocidadeLayer = L.polyline([[mediaRecente.lat, mediaRecente.lon],[pontoFinalVetor.latitude, pontoFinalVetor.longitude]], { color: '#FF4500', weight: 3, dashArray: '5, 5' }).addTo(map);
+                        vetorVelocidadeLayer = L.polyline([[mediaRecente.lat, mediaRecente.lon],[pontoFinalVetor.latitude, pontoFinalVetor.longitude]], { color: '#FF4500', weight: 5, dashArray: '5, 5' }).addTo(map);
                     }
                 } else { mediaAntigaEl.textContent = "--"; velocidadeEl.textContent = "--"; direcaoEl.textContent = "--"; }
             } else { mediaRecenteEl.textContent = "--"; }
