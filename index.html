@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=0.6, user-scalable=no">
     <title>ContraNav GPS</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
@@ -30,7 +30,7 @@
         .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .data-point { background-color: #2c2c2c; padding: 8px; border-radius: 6px; }
         .label { font-weight: bold; color: #03dac6; font-size: 0.8em; display: block; }
-        .value { font-family: 'Courier New', Courier, monospace; color: #fff; font-size: 1em; }
+        .value { font-family: 'Courier New', Courier, monospace; color: #fff; font-size: 0.6em; }
         #status { text-align: center; padding: 8px; background-color: #3700b3; color: white; font-weight: bold; margin-bottom: 10px; border-radius: 5px; }
         .controls { margin-top: 10px; padding-top: 10px; border-top: 1px solid #3a3a3a; }
         .slider-control { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
@@ -59,7 +59,7 @@
         const statusEl = document.getElementById('status'), mediaRecenteEl = document.getElementById('media_recente'), mediaAntigaEl = document.getElementById('media_antiga'), velocidadeEl = document.getElementById('velocidade'), direcaoEl = document.getElementById('direcao'), raio1Slider = document.getElementById('raio1'), raio2Slider = document.getElementById('raio2'), raio1ValueEl = document.getElementById('raio1-value'), raio2ValueEl = document.getElementById('raio2-value');
 
         // --- ARMAZENAMENTO E CONFIGURAÇÕES ---
-        let historicoPontos = [], raio1 = 70, raio2 = 100;
+        let historicoPontos = [], raio1 = 50, raio2 = 100;
         const TEMPO_MAX_HISTORICO = 15000;
 
         // --- CONFIGURAÇÃO DO MAPA ---
@@ -127,7 +127,7 @@
                     if (velocidadeKnots < 50 && velocidadeKnots > 0.1) {
                         const distancia30s = (distanciaMetros / 9) * 60;
                         const pontoFinalVetor = calcularPontoDestino(mediaRecente.lat, mediaRecente.lon, distancia30s, direcaoGraus);
-                        vetorVelocidadeLayer = L.polyline([[mediaRecente.lat, mediaRecente.lon],[pontoFinalVetor.latitude, pontoFinalVetor.longitude]], { color: '#FF4500', weight: 5, dashArray: '5, 5' }).addTo(map);
+                        vetorVelocidadeLayer = L.polyline([[mediaRecente.lat, mediaRecente.lon],[pontoFinalVetor.latitude, pontoFinalVetor.longitude]], { color: '#FF4500', weight: 5, dashArray: '5, 10' }).addTo(map);
                     }
                 } else { mediaAntigaEl.textContent = "--"; velocidadeEl.textContent = "--"; direcaoEl.textContent = "--"; }
             } else { mediaRecenteEl.textContent = "--"; }
