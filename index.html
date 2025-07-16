@@ -112,6 +112,9 @@
                     fillOpacity: 0.8
                 }).addTo(map);
 
+                // VVV ADICIONE ESTA LINHA AQUI VVV
+                map.panTo([mediaRecente.lat, mediaRecente.lon]); // 📍 Centraliza o mapa na posição atual
+                
                 circuloRaio1Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio1, color: '#1E90FF', fillOpacity: 0.1 }).addTo(map);
                 circuloRaio2Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio2, color: '#32CD32', fillOpacity: 0.1 }).addTo(map);
                 if (mediaAntiga) {
