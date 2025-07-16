@@ -101,7 +101,7 @@
             if(circuloRaio1Layer) map.removeLayer(circuloRaio1Layer);
             if(circuloRaio2Layer) map.removeLayer(circuloRaio2Layer);
             if (mediaRecente) {
-                mediaRecenteEl.textContent = `${mediaRecente.lat.toFixed(7)} ${mediaRecente.lon.toFixed(7)}`;
+                mediaRecenteEl.textContent = `${mediaRecente.lat.toFixed(8)} ${mediaRecente.lon.toFixed(8)}`;
                 
                 // <-- MUDANÇA AQUI: Usando L.circleMarker para desenhar um círculo vermelho.
                 pontoMedioLayer = L.circleMarker([mediaRecente.lat, mediaRecente.lon], {
@@ -119,17 +119,17 @@
                 circuloRaio1Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio1, color: '#1E90FF', fillOpacity: 0.05 }).addTo(map);
                 circuloRaio2Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio2, color: '#32CD32', fillOpacity: 0.05 }).addTo(map);
                 if (mediaAntiga) {
-                    mediaAntigaEl.textContent = `${mediaAntiga.lat.toFixed(7)} ${mediaAntiga.lon.toFixed(7)}`;
+                    mediaAntigaEl.textContent = `${mediaAntiga.lat.toFixed(8)} ${mediaAntiga.lon.toFixed(8)}`;
                     const distanciaMetros = haversine(mediaAntiga, mediaRecente);
                     const velocidadeKnots = (distanciaMetros / 9) * 1.94384;
                     const direcaoGraus = calcularDirecao(mediaAntiga, mediaRecente);
                     if (velocidadeKnots < 40 && velocidadeKnots > 0.07) {
-                        velocidadeEl.textContent = `${velocidadeKnots.toFixed(1)} kn`;
+                        velocidadeEl.textContent = `${velocidadeKnots.toFixed(1)} kt`;
                         direcaoEl.textContent = `${direcaoGraus.toFixed(0)}°`;
                         const distancia30s = (distanciaMetros / 9) * 60;
                         const pontoFinalVetor = calcularPontoDestino(mediaRecente.lat, mediaRecente.lon, distancia30s, direcaoGraus);
                         vetorVelocidadeLayer = L.polyline([[mediaRecente.lat, mediaRecente.lon],[pontoFinalVetor.latitude, pontoFinalVetor.longitude]], { color: '#FF4500', weight: 5, dashArray: '5, 10' }).addTo(map);
-                    } else { velocidadeEl.textContent = `${velocidadeKnots.toFixed(2)} kn`; direcaoEl.textContent = "--"; }
+                    } else { velocidadeEl.textContent = `${velocidadeKnots.toFixed(3)} kt`; direcaoEl.textContent = "--"; }
                 } else { mediaAntigaEl.textContent = "--"; velocidadeEl.textContent = "--"; direcaoEl.textContent = "--"; }
             } else { mediaRecenteEl.textContent = "--"; }
         }
