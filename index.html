@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ContraNav GPS</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+        .info-panel {
+            background-color: #1e1e1e;
+            padding: 10px 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            z-index: 1000;
+            border-bottom: 1px solid #444;
+        }
+        #map {
+            flex-grow: 1;
+            background-color: #333;
+            z-index: 0;
+        }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .data-point { background-color: #2c2c2c; padding: 8px; border-radius: 6px; }
+        .label { font-weight: bold; color: #03dac6; font-size: 0.8em; display: block; }
+        .value { font-family: 'Courier New', Courier, monospace; color: #fff; font-size: 1em; }
+        #status { text-align: center; padding: 8px; background-color: #3700b3; color: white; font-weight: bold; margin-bottom: 10px; border-radius: 5px; }
+        .controls { margin-top: 10px; padding-top: 10px; border-top: 1px solid #3a3a3a; }
+        .slider-control { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        input[type="range"] { flex-grow: 1; }
+        .leaflet-control-layers-toggle { background-image: url(https://unpkg.com/leaflet@1.9.4/dist/images/layers.png); }
+    </style>
+</head>
+<body>
+    <div class="info-panel">
+        <div id="status">Aguardando permissão e sinal de GPS...</div>
+        <div class="data-grid">
+            <div class="data-point"> <span class="label">Média Recente (3s)</span> <span id="media_recente" class="value">--</span> </div>
+            <div class="data-point"> <span class="label">Média Antiga (9-11s)</span> <span id="media_antiga" class="value">--</span> </div>
+            <div class="data-point"> <span class="label">Velocidade Média</span> <span id="velocidade" class="value">--</span> </div>
+            <div class="data-point"> <span class="label">Direção Média</span> <span id="direcao" class="value">--</span> </div>
+        </div>
+        <div class="controls">
+            <div class="slider-control"> <label for="raio1" class="label">Raio 1:</label> <input type="range" id="raio1" min="10" max="200" value="50"> <span id="raio1-value" class="value">50 m</span> </div>
+            <div class="slider-control"> <label for="raio2" class="label">Raio 2:</label> <input type="range" id="raio2" min="10" max="200" value="100"> <span id="raio2-value" class="value">100 m</span> </div>
+        </div>
+    </div>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // --- ELEMENTOS DO DOM ---
+        const statusEl = document.getElementById('status'), mediaRecenteEl = document.getElementById('media_recente'), mediaAntigaEl = document.getElementById('media_antiga'), velocidadeEl = document.getElementById('velocidade'), direcaoEl = document.getElementById('direcao'), raio1Slider = document.getElementById('raio1'), raio2Slider = document.getElementById('raio2'), raio1ValueEl = document.getElementById('raio1-value'), raio2ValueEl = document.getElementById('raio2-value');
+
+        // --- ARMAZENAMENTO E CONFIGURAÇÕES ---
+        let historicoPontos = [], raio1 = 60, raio2 = 100;
+        const TEMPO_MAX_HISTORICO = 15000;
+
+        // --- CONFIGURAÇÃO DO MAPA ---
+        const imageUrl = 'https://raw.githubusercontent.com/Contranada/ContraNav/main/1841.png';
+        const imageBounds = [[-26.8667, -48.7000], [-26.9500, -48.5500]];
+        
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' });
+        const cartoLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CartoDB' });
+        const cartaNauticaLayer = L.imageOverlay(imageUrl, imageBounds, { opacity: 0.6, interactive: true })
+            .on('error', () => alert("ERRO: Não foi possível carregar sua imagem PNG. Verifique a URL no código."));
+
+        const map = L.map('map').setView([-26.908, -48.65], 16);
+        cartoLayer.addTo(map);
+        map.fitBounds(imageBounds);
+
+        const baseMaps = { "Mapa Padrão (CartoDB)": cartoLayer, "Mapa Alternativo (OSM)": osmLayer };
+        const overlayMaps = { "Carta Náutica": cartaNauticaLayer };
+        L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+        // --- LÓGICA DO GPS E PLOTAGEM ---
+        let pontoMedioLayer = null, vetorVelocidadeLayer = null, circuloRaio1Layer = null, circuloRaio2Layer = null;
+        raio1Slider.addEventListener('input', (e) => { raio1 = parseInt(e.target.value); raio1ValueEl.textContent = `${raio1} m`; });
+        raio2Slider.addEventListener('input', (e) => { raio2 = parseInt(e.target.value); raio2ValueEl.textContent = `${raio2} m`; });
+        
+        function processarPosicao(posicao) {
+            statusEl.textContent = `GPS Ativo. Precisão: ${posicao.coords.accuracy.toFixed(0)}m`;
+            statusEl.style.backgroundColor = '#018786';
+            const { latitude, longitude } = posicao.coords;
+            const timestamp = Date.now();
+            historicoPontos.push({ lat: latitude, lon: longitude, timestamp: timestamp });
+            historicoPontos = historicoPontos.filter(p => timestamp - p.timestamp < TEMPO_MAX_HISTORICO);
+            const pontosRecentes = historicoPontos.filter(p => timestamp - p.timestamp <= 3000);
+            const pontosAntigos = historicoPontos.filter(p => (timestamp - p.timestamp) >= 9000 && (timestamp - p.timestamp) <= 11000);
+            const mediaRecente = calcularMediaLatLon(pontosRecentes);
+            const mediaAntiga = calcularMediaLatLon(pontosAntigos);
+            if(pontoMedioLayer) map.removeLayer(pontoMedioLayer);
+            if(vetorVelocidadeLayer) map.removeLayer(vetorVelocidadeLayer);
+            if(circuloRaio1Layer) map.removeLayer(circuloRaio1Layer);
+            if(circuloRaio2Layer) map.removeLayer(circuloRaio2Layer);
+            if (mediaRecente) {
+                mediaRecenteEl.textContent = `${mediaRecente.lat.toFixed(5)}, ${mediaRecente.lon.toFixed(5)}`;
+                
+                // <-- MUDANÇA AQUI: Usando L.circleMarker para desenhar um círculo vermelho.
+                pontoMedioLayer = L.circleMarker([mediaRecente.lat, mediaRecente.lon], {
+                    radius: 7,
+                    fillColor: "#ff0000",
+                    color: "#cc0000",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+
+                circuloRaio1Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio1, color: '#1E90FF', fillOpacity: 0.1 }).addTo(map);
+                circuloRaio2Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio2, color: '#32CD32', fillOpacity: 0.1 }).addTo(map);
+                if (mediaAntiga) {
+                    mediaAntigaEl.textContent = `${mediaAntiga.lat.toFixed(5)}, ${mediaAntiga.lon.toFixed(5)}`;
+                    const distanciaMetros = haversine(mediaAntiga, mediaRecente);
+                    const velocidadeKnots = (distanciaMetros / 9) * 1.94384;
+                    const direcaoGraus = calcularDirecao(mediaAntiga, mediaRecente);
+                    velocidadeEl.textContent = `${velocidadeKnots.toFixed(1)} kn`;
+                    direcaoEl.textContent = `${direcaoGraus.toFixed(0)}°`;
+                    if (velocidadeKnots < 50 && velocidadeKnots > 0.1) {
+                        const distancia30s = (distanciaMetros / 9) * 60;
+                        const pontoFinalVetor = calcularPontoDestino(mediaRecente.lat, mediaRecente.lon, distancia30s, direcaoGraus);
+                        vetorVelocidadeLayer = L.polyline([[mediaRecente.lat, mediaRecente.lon],[pontoFinalVetor.latitude, pontoFinalVetor.longitude]], { color: '#FF4500', weight: 3, dashArray: '5, 5' }).addTo(map);
+                    }
+                } else { mediaAntigaEl.textContent = "--"; velocidadeEl.textContent = "--"; direcaoEl.textContent = "--"; }
+            } else { mediaRecenteEl.textContent = "--"; }
+        }
+
+        // --- FUNÇÕES AUXILIARES ---
+        function tratarErro(erro) { let msg; switch (erro.code) { case erro.PERMISSION_DENIED: msg = "Permissão de localização negada."; break; case erro.POSITION_UNAVAILABLE: msg = "Localização indisponível."; break; case erro.TIMEOUT: msg = "Solicitação de localização expirou."; break; default: msg = "Erro desconhecido."; break; } statusEl.textContent = msg; statusEl.style.backgroundColor = '#cf6679'; }
+        if ('geolocation' in navigator) { navigator.geolocation.watchPosition(processarPosicao, tratarErro, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }); } else { statusEl.textContent = "Geolocalização não é suportada."; }
+        function calcularMediaLatLon(pontos) { if (pontos.length === 0) return null; const soma = pontos.reduce((acc, p) => ({ lat: acc.lat + p.lat, lon: acc.lon + p.lon }), { lat: 0, lon: 0 }); return { lat: soma.lat / pontos.length, lon: soma.lon / pontos.length }; }
+        function haversine(ponto1, ponto2) { const R = 6371e3; const toRadians = (deg) => deg * (Math.PI / 180); const dLat = toRadians(ponto2.lat - ponto1.lat); const dLon = toRadians(ponto2.lon - ponto1.lon); const lat1 = toRadians(ponto1.lat); const lat2 = toRadians(ponto2.lat); const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2); const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); return R * c; }
+        function calcularPontoDestino(lat, lon, dist, brng) { const R = 6371e3; const d = dist; const lat1 = lat * Math.PI / 180; const lon1 = lon * Math.PI / 180; const brngRad = brng * Math.PI / 180; const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d / R) + Math.cos(lat1) * Math.sin(d / R) * Math.cos(brngRad)); const lon2 = lon1 + Math.atan2(Math.sin(brngRad) * Math.sin(d / R) * Math.cos(lat1), Math.cos(d / R) - Math.sin(lat1) * Math.sin(lat2)); return { latitude: lat2 * 180 / Math.PI, longitude: lon2 * 180 / Math.PI }; }
+        function calcularDirecao(pontoInicial, pontoFinal) { const toRadians = (deg) => deg * (Math.PI / 180); const toDegrees = (rad) => rad * (180 / Math.PI); const lat1 = toRadians(pontoInicial.lat); const lon1 = toRadians(pontoInicial.lon); const lat2 = toRadians(pontoFinal.lat); const lon2 = toRadians(pontoFinal.lon); const dLon = lon2 - lon1; const y = Math.sin(dLon) * Math.cos(lat2); const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon); const brng = toDegrees(Math.atan2(y, x)); return (brng + 360) % 360; }
+    </script>
+</body>
+</html>
