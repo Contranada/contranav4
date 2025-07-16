@@ -101,7 +101,7 @@
             if(circuloRaio1Layer) map.removeLayer(circuloRaio1Layer);
             if(circuloRaio2Layer) map.removeLayer(circuloRaio2Layer);
             if (mediaRecente) {
-                mediaRecenteEl.textContent = `${mediaRecente.lat.toFixed(5)}, ${mediaRecente.lon.toFixed(5)}`;
+                mediaRecenteEl.textContent = `${mediaRecente.lat.toFixed(6)} ${mediaRecente.lon.toFixed(6)}`;
                 
                 // <-- MUDANÇA AQUI: Usando L.circleMarker para desenhar um círculo vermelho.
                 pontoMedioLayer = L.circleMarker([mediaRecente.lat, mediaRecente.lon], {
@@ -119,7 +119,7 @@
                 circuloRaio1Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio1, color: '#1E90FF', fillOpacity: 0.05 }).addTo(map);
                 circuloRaio2Layer = L.circle([mediaRecente.lat, mediaRecente.lon], { radius: raio2, color: '#32CD32', fillOpacity: 0.05 }).addTo(map);
                 if (mediaAntiga) {
-                    mediaAntigaEl.textContent = `${mediaAntiga.lat.toFixed(5)}, ${mediaAntiga.lon.toFixed(5)}`;
+                    mediaAntigaEl.textContent = `${mediaAntiga.lat.toFixed(6)} ${mediaAntiga.lon.toFixed(6)}`;
                     const distanciaMetros = haversine(mediaAntiga, mediaRecente);
                     const velocidadeKnots = (distanciaMetros / 9) * 1.94384;
                     const direcaoGraus = calcularDirecao(mediaAntiga, mediaRecente);
