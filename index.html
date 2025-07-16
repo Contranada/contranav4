@@ -129,7 +129,7 @@
                         const distancia30s = (distanciaMetros / 9) * 60;
                         const pontoFinalVetor = calcularPontoDestino(mediaRecente.lat, mediaRecente.lon, distancia30s, direcaoGraus);
                         vetorVelocidadeLayer = L.polyline([[mediaRecente.lat, mediaRecente.lon],[pontoFinalVetor.latitude, pontoFinalVetor.longitude]], { color: '#FF4500', weight: 5, dashArray: '5, 10' }).addTo(map);
-                    } else { velocidadeEl.textContent = "--"; direcaoEl.textContent = "--"; }
+                    } else { velocidadeEl.textContent = `${velocidadeKnots.toFixed(2)} kn`; direcaoEl.textContent = "--"; }
                 } else { mediaAntigaEl.textContent = "--"; velocidadeEl.textContent = "--"; direcaoEl.textContent = "--"; }
             } else { mediaRecenteEl.textContent = "--"; }
         }
