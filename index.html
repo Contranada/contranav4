@@ -30,9 +30,9 @@
         .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .data-point { background-color: #2c2c2c; padding: 5px; border-radius: 6px; }
         .label { font-weight: bold; color: #03dac6; font-size: 0.6em; display: block; }
-        .value { font-family: 'Courier New', Courier, monospace; color: #fff; font-size: 1.2em; }
-        #status { text-align: center; padding: 8px; background-color: #3700b3; color: white; font-weight: bold; margin-bottom: 10px; border-radius: 5px; }
-        .controls { margin-top: 10px; padding-top: 10px; border-top: 1px solid #3a3a3a; }
+        .value { font-family: 'Courier New', Courier, monospace; color: #fff; font-size: 2em; }
+        #status { text-align: center; padding: 5px; background-color: #3700b3; color: white; font-weight: bold; margin-bottom: 10px; border-radius: 5px; }
+        .controls { margin-top: 6px; padding-top: 6px; border-top: 1px solid #3a3a3a; }
         .slider-control { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
         input[type="range"] { flex-grow: 1; }
         .leaflet-control-layers-toggle { background-image: url(https://unpkg.com/leaflet@1.9.4/dist/images/layers.png); }
@@ -105,7 +105,7 @@
                 
                 // <-- MUDANÇA AQUI: Usando L.circleMarker para desenhar um círculo vermelho.
                 pontoMedioLayer = L.circleMarker([mediaRecente.lat, mediaRecente.lon], {
-                    radius: 7,
+                    radius: 6,
                     fillColor: "#ff0000",
                     color: "#cc0000",
                     weight: 1,
@@ -123,7 +123,7 @@
                     const distanciaMetros = haversine(mediaAntiga, mediaRecente);
                     const velocidadeKnots = (distanciaMetros / 9) * 1.94384;
                     const direcaoGraus = calcularDirecao(mediaAntiga, mediaRecente);
-                    if (velocidadeKnots < 50 && velocidadeKnots > 0.1) {
+                    if (velocidadeKnots < 40 && velocidadeKnots > 0.07) {
                         velocidadeEl.textContent = `${velocidadeKnots.toFixed(1)} kn`;
                         direcaoEl.textContent = `${direcaoGraus.toFixed(0)}°`;
                         const distancia30s = (distanciaMetros / 9) * 60;
