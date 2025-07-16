@@ -93,7 +93,7 @@
             historicoPontos.push({ lat: latitude, lon: longitude, timestamp: timestamp });
             historicoPontos = historicoPontos.filter(p => timestamp - p.timestamp < TEMPO_MAX_HISTORICO);
             const pontosRecentes = historicoPontos.filter(p => timestamp - p.timestamp <= 3500);
-            const pontosAntigos = historicoPontos.filter(p => (timestamp - p.timestamp) >= 8800 && (timestamp - p.timestamp) <= 11200);
+            const pontosAntigos = historicoPontos.filter(p => (timestamp - p.timestamp) >= 7800 && (timestamp - p.timestamp) <= 12200);
             const mediaRecente = calcularMediaLatLon(pontosRecentes);
             const mediaAntiga = calcularMediaLatLon(pontosAntigos);
             if(pontoMedioLayer) map.removeLayer(pontoMedioLayer);
